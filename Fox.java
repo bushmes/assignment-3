@@ -3,6 +3,9 @@ import java.util.Iterator;
 import java.util.Random;
 
 
+
+
+//bushmes
 /**
  * A simple model of a fox.
  * Foxes age, move, eat rabbits, and die.
