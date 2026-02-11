@@ -12,7 +12,6 @@ import java.util.Random;
 public class Fox extends Animal
 {
 
-    
     // The age at which a fox can start to breed.
     private static final int BREEDING_AGE = 15;
     // The age to which a fox can live.
