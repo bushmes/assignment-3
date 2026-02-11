@@ -8,7 +8,7 @@
 public abstract class Animal
 {
 
-    
+    // aha
     private boolean alive;
     // The animal's position.
     private Location location;
