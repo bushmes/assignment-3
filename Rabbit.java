@@ -99,6 +99,13 @@ public class Rabbit extends Animal
             if(!freeLocations.isEmpty()) {
                 giveBirth(nextFieldState, freeLocations);
             }
+            Location foodLocation = findFood(currentField, nextFieldState);
+            if(foodLocation != null) {
+                setLocation(foodLocation);
+                nextFieldState.placeAnimal(this, foodLocation);
+                return;
+            }
+
             // Try to move into a free location.
             if(! freeLocations.isEmpty()) {
                 Location nextLocation = freeLocations.get(0);
