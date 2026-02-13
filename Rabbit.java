@@ -21,11 +21,15 @@ public class Rabbit extends Animal
     private static final int MAX_LITTER_SIZE = 4;
     // A shared random number generator to control breeding.
     private static final Random rand = Randomizer.getRandom();
-    
+    // Plant's food value
+    private static final int PLANT_FOOD_VALUE = 7;
+
     // Individual characteristics (instance fields).
     
     // The rabbit's age.
     private int age;
+    // The rabbit's foodlevel
+    private int foodLevel;
 
     /**
      * Create a new rabbit. A rabbit may be created with age
@@ -41,6 +45,42 @@ public class Rabbit extends Animal
         if(randomAge) {
             age = rand.nextInt(MAX_AGE);
         }
+        foodLevel = 1 + rand.nextInt(PLANT_FOOD_VALUE);
+
+    }
+
+    // Increases hunger when called
+    private void incrementHunger()
+    {
+         foodLevel--;
+        if(foodLevel <= 0) {
+            setDead();
+        }
+    }
+
+    private Location findFood(Field currentField, Field nextFieldState)
+    {
+        Location here = getLocation();
+
+        // Eat in current position first
+        if(currentField.getPlantLevelAt(here) > 0) {
+            if(nextFieldState.consumePlantAt(here)) {
+                foodLevel = PLANT_FOOD_VALUE;
+            }
+            return here;
+        }
+
+        // Otherwise search adjacent
+        List<Location> adjacent = currentField.getAdjacentLocations(here);
+        for(Location loc : adjacent) {
+            if(currentField.getPlantLevelAt(loc) > 0) {
+                if(nextFieldState.consumePlantAt(loc)) {
+                    foodLevel = PLANT_FOOD_VALUE;
+                }
+                return loc;
+            }
+        }
+        return null;
     }
     
     /**
@@ -51,6 +91,7 @@ public class Rabbit extends Animal
      */
     public void act(Field currentField, Field nextFieldState)
     {
+        incrementHunger();
         incrementAge();
         if(isAlive()) {
             List<Location> freeLocations = 

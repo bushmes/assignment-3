@@ -18,6 +18,8 @@ public class Simulator
     private static final double FOX_CREATION_PROBABILITY = 0.02;
     // The probability that a rabbit will be created in any given position.
     private static final double RABBIT_CREATION_PROBABILITY = 0.08;    
+    // The probability that a plant will be created
+    private static final double PLANT_CREATION_PROBABILITY = 0.60;
 
     // The current state of the field.
     private Field field;
@@ -87,6 +89,9 @@ public class Simulator
         // Use a separate Field to store the starting state of
         // the next step.
         Field nextFieldState = new Field(field.getDepth(), field.getWidth());
+        nextFieldState.copyPlantsFrom(field);
+        nextFieldState.growPlants();
+
 
         List<Animal> animals = field.getAnimals();
         for (Animal anAnimal : animals) {
@@ -117,6 +122,8 @@ public class Simulator
     {
         Random rand = Randomizer.getRandom();
         field.clear();
+        field.seedPlants(PLANT_CREATION_PROBABILITY);
+
         for(int row = 0; row < field.getDepth(); row++) {
             for(int col = 0; col < field.getWidth(); col++) {
                 if(rand.nextDouble() <= FOX_CREATION_PROBABILITY) {

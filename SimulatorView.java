@@ -20,6 +20,9 @@ public class SimulatorView extends JFrame
 
     // Color used for objects that have no defined color.
     private static final Color UNKNOWN_COLOR = Color.gray;
+    // Plant's color
+    private static final Color PLANT_COLOR = new Color(120, 200, 120);
+
 
     private final String STEP_PREFIX = "Step: ";
     private final String POPULATION_PREFIX = "Population: ";
@@ -103,13 +106,19 @@ public class SimulatorView extends JFrame
 
         for(int row = 0; row < field.getDepth(); row++) {
             for(int col = 0; col < field.getWidth(); col++) {
+                Location location = new Location(row, col);
                 Object animal = field.getAnimalAt(new Location(row, col));
                 if(animal != null) {
                     stats.incrementCount(animal.getClass());
                     fieldView.drawMark(col, row, getColor(animal.getClass()));
                 }
                 else {
-                    fieldView.drawMark(col, row, EMPTY_COLOR);
+                    if(field.getPlantLevelAt(location) > 0) {
+                        fieldView.drawMark(col, row, PLANT_COLOR);
+                    }
+                    else {
+                        fieldView.drawMark(col, row, EMPTY_COLOR);
+                    }
                 }
             }
         }

@@ -19,6 +19,12 @@ public class Field
     // The animals.
     private final List<Animal> animals = new ArrayList<>();
 
+    // Amount of plant food available at each location
+    private final int[][] plants;
+
+    // Plant configuraton
+    private static final int MAX_PLANT_LEVEL = 6;
+    private static final double PLANT_GROWTH_PROBABILITY = 0.05;
     /**
      * Represent a field of the given dimensions.
      * @param depth The depth of the field.
@@ -28,8 +34,51 @@ public class Field
     {
         this.depth = depth;
         this.width = width;
+        this.plants = new int[depth][width];
     }
 
+    public void copyPlantsFrom(Field other){
+        for(int i = 0;i < depth; i++){
+            System.arraycopy(other.plants[i], 0, this.plants[i], 0, width);
+        }
+    }
+
+    public void seedPlants(double initialProbability){
+        for(int i = 0; i < depth; i++){
+            for(int j = 0; j < width; j++){
+                if(rand.nextDouble() <= initialProbability){
+                    plants[i][j] = 1 +rand.nextInt(Math.max(1, MAX_PLANT_LEVEL / 2));
+                } else {
+                    plants[i][j] = 0;
+                }
+            }
+        }
+    }
+
+    public void growPlants(){
+        for (int i = 0; i < depth; i++) {
+            for (int j = 0; j < width; j++) {
+                if (plants[i][j] < MAX_PLANT_LEVEL && rand.nextDouble() <= PLANT_GROWTH_PROBABILITY) {
+                    plants[i][j]++;
+                }
+            }
+        }
+    }
+
+    public int getPlantLevelAt(Location location){
+        return plants[location.row()][location.col()];
+    }
+
+    public boolean consumePlantAt(Location location)
+    {
+        int i = location.row();
+        int j = location.col();
+        if (plants[i][j] > 0) {
+            plants[i][j]--;
+            return true;
+        }
+        return false;
+    }
     /**
      * Place an animal at the given location.
      * If there is already an animal at the location it will
