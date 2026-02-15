@@ -26,6 +26,9 @@ public class SimulatorView extends JFrame
     private static final Color SUNNY_TINT = new Color(255, 255, 255);
     private static final Color RAINY_TINT = new Color(200, 220, 255);
     private static final Color FOGGY_TINT = new Color(220, 220, 220);
+    //Infection color
+    private static final Color INFECTED_COLOR = Color.red;
+
 
 
     private final String STEP_PREFIX = "Step: ";
@@ -128,7 +131,12 @@ public class SimulatorView extends JFrame
                 Object animal = field.getAnimalAt(new Location(row, col));
                 if(animal != null) {
                     stats.incrementCount(animal.getClass());
-                    fieldView.drawMark(col, row, getColor(animal.getClass()));
+                    Animal a = (Animal) animal;
+                    if(a.isInfected()) {
+                        fieldView.drawMark(col, row, INFECTED_COLOR);
+                    } else {
+                        fieldView.drawMark(col, row, getColor(a.getClass()));
+                    }
                 }
                 else {
                     if(field.getPlantLevelAt(location) > 0) {

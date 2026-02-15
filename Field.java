@@ -186,6 +186,18 @@ public class Field
         return locations;
     }
 
+    public List<Animal> getAdjacentAnimals(Location location){
+        List<Animal> adjacentAnimals = new ArrayList<>();
+        for(Location loc : getAdjacentLocations(location)) {
+            Animal a = getAnimalAt(loc);
+            if(a != null && a.isAlive()) {
+                adjacentAnimals.add(a);
+            }
+        }
+        return adjacentAnimals;
+    }
+
+
     /**
      * Print out the number of foxes and rabbits in the field.
      */

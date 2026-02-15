@@ -11,6 +11,10 @@ public abstract class Animal
     private boolean alive;
     // The animal's position.
     private Location location;
+    
+    private boolean infected = false;
+    private int infectedSteps = 0;
+
 
     /**
      * Constructor for objects of class Animal.
@@ -64,4 +68,28 @@ public abstract class Animal
     {
         this.location = location;
     }
+
+    public boolean isInfected() {
+        return infected;
+    }
+
+    public void infect() {
+        infected = true;
+        infectedSteps = 0;
+    }
+
+    
+     // Update disease progression for one step.
+    protected void progressDisease(double deathProbAfterIncubation, int incubationSteps) {
+        if(!infected) return;
+
+        infectedSteps++;
+
+        if(infectedSteps >= incubationSteps) {
+            if(Randomizer.getRandom().nextDouble() <= deathProbAfterIncubation) {
+                setDead();
+            }
+        }
+    }
+
 }

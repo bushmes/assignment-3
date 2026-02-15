@@ -93,6 +93,23 @@ public class Rabbit extends Animal
     {
         incrementHunger();
         incrementAge();
+        // Small chance to get infected randomly
+        if(!isInfected() && Randomizer.getRandom().nextDouble() <= 0.0005) {
+            infect();
+        }
+
+        // Spread when meeting adjacent animals
+        if(isInfected()) {
+            for(Animal other : currentField.getAdjacentAnimals(getLocation())) {
+                if(!other.isInfected() && Randomizer.getRandom().nextDouble() <= 0.15) {
+                    other.infect();
+                }
+            }
+        }
+
+        // Disease progression 
+        progressDisease(0.03, 10);
+
         if(isAlive()) {
             List<Location> freeLocations = 
                 nextFieldState.getFreeAdjacentLocations(getLocation());
