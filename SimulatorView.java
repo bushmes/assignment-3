@@ -22,6 +22,10 @@ public class SimulatorView extends JFrame
     private static final Color UNKNOWN_COLOR = Color.gray;
     // Plant's color
     private static final Color PLANT_COLOR = new Color(120, 200, 120);
+    //Weathers' colors
+    private static final Color SUNNY_TINT = new Color(255, 255, 255);
+    private static final Color RAINY_TINT = new Color(200, 220, 255);
+    private static final Color FOGGY_TINT = new Color(220, 220, 220);
 
 
     private final String STEP_PREFIX = "Step: ";
@@ -104,6 +108,20 @@ public class SimulatorView extends JFrame
         
         fieldView.preparePaint();
 
+        // Set background tint based on weather
+        Color background;
+        if(field.getWeather() == Weather.RAINY) {
+            background = RAINY_TINT;
+        } else if(field.getWeather() == Weather.FOGGY) {
+            background = FOGGY_TINT;
+        } else {
+            background = SUNNY_TINT;
+        }
+
+        // Paint entire background
+        fieldView.drawBackground(background);
+
+
         for(int row = 0; row < field.getDepth(); row++) {
             for(int col = 0; col < field.getWidth(); col++) {
                 Location location = new Location(row, col);
@@ -164,6 +182,12 @@ public class SimulatorView extends JFrame
             gridWidth = width;
             size = new Dimension(0, 0);
         }
+
+        public void drawBackground(Color color){
+            g.setColor(color);
+            g.fillRect(0, 0, size.width, size.height);
+        }
+
 
         /**
          * Tell the GUI manager how big we would like to be.
