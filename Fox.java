@@ -132,6 +132,12 @@ public class Fox extends Animal
     private Location findFood(Field field)
     {
         List<Location> adjacent = field.getAdjacentLocations(getLocation());
+         if(field.getWeather() == Weather.FOGGY) {
+            Location here = getLocation();
+            adjacent.removeIf(loc ->
+                Math.abs(loc.row() - here.row()) + Math.abs(loc.col() - here.col()) != 1
+            );
+        }
         Iterator<Location> it = adjacent.iterator();
         Location foodLocation = null;
         while(foodLocation == null && it.hasNext()) {

@@ -21,6 +21,10 @@ public class Simulator
     // The probability that a plant will be created
     private static final double PLANT_CREATION_PROBABILITY = 0.60;
 
+    private final WeatherModel weatherModel = new WeatherModel();
+
+
+
     // The current state of the field.
     private Field field;
     // The current step of the simulation.
@@ -89,9 +93,17 @@ public class Simulator
         // Use a separate Field to store the starting state of
         // the next step.
         Field nextFieldState = new Field(field.getDepth(), field.getWidth());
-        nextFieldState.copyPlantsFrom(field);
-        nextFieldState.growPlants();
 
+        // copy persistent layers/state
+        nextFieldState.copyPlantsFrom(field);
+        nextFieldState.copyWeatherFrom(field);
+
+        // update weather for this step
+        weatherModel.updateWeather();
+        nextFieldState.setWeather(weatherModel.getCurrentWeather());
+
+        // grow plants based on weather
+        nextFieldState.growPlants(nextFieldState.getWeather());
 
         List<Animal> animals = field.getAnimals();
         for (Animal anAnimal : animals) {
@@ -120,6 +132,7 @@ public class Simulator
      */
     private void populate()
     {
+        field.setWeather(weatherModel.getCurrentWeather());
         Random rand = Randomizer.getRandom();
         field.clear();
         field.seedPlants(PLANT_CREATION_PROBABILITY);
@@ -148,6 +161,9 @@ public class Simulator
     {
         //System.out.print("Step: " + step + " ");
         field.fieldStats();
+        //Show the current weather
+        System.out.println("Weather: " + field.getWeather());
+
     }
     
     /**

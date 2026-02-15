@@ -25,6 +25,10 @@ public class Field
     // Plant configuraton
     private static final int MAX_PLANT_LEVEL = 6;
     private static final double PLANT_GROWTH_PROBABILITY = 0.05;
+
+    //Store weather in field state
+    private Weather weather = Weather.SUNNY;
+
     /**
      * Represent a field of the given dimensions.
      * @param depth The depth of the field.
@@ -36,6 +40,20 @@ public class Field
         this.width = width;
         this.plants = new int[depth][width];
     }
+
+    public Weather getWeather() {
+        return weather;
+    }
+
+    public void setWeather(Weather weather) {
+        this.weather = weather;
+    }
+
+    public void copyWeatherFrom(Field other) {
+        this.weather = other.weather;
+    }
+
+
 
     public void copyPlantsFrom(Field other){
         for(int i = 0;i < depth; i++){
@@ -55,15 +73,21 @@ public class Field
         }
     }
 
-    public void growPlants(){
+    public void growPlants(Weather weather){
+        double growthProb = PLANT_GROWTH_PROBABILITY;
+
+        if(weather == Weather.RAINY) growthProb *= 2.0;
+        else if(weather == Weather.FOGGY) growthProb *= 0.7;
+
         for (int i = 0; i < depth; i++) {
             for (int j = 0; j < width; j++) {
-                if (plants[i][j] < MAX_PLANT_LEVEL && rand.nextDouble() <= PLANT_GROWTH_PROBABILITY) {
+                if (plants[i][j] < MAX_PLANT_LEVEL && rand.nextDouble() <= growthProb) {
                     plants[i][j]++;
                 }
             }
         }
     }
+
 
     public int getPlantLevelAt(Location location){
         return plants[location.row()][location.col()];
@@ -89,7 +113,7 @@ public class Field
     public void placeAnimal(Animal anAnimal, Location location)
     {
         assert location != null;
-        Object other = field.get(location);
+        Animal other = field.get(location);
         if(other != null) {
             animals.remove(other);
         }
@@ -190,6 +214,7 @@ public class Field
     public void clear()
     {
         field.clear();
+        animals.clear();
     }
 
     /**
