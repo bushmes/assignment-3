@@ -10,24 +10,20 @@ import java.util.Random;
  * @author David J. Barnes and Michael Kölling
  * @version 7.1
  */
-public class Fox extends Animal
+public class lion extends Animal
 {
-    
 
     // The age at which a fox can start to breed.
     private static final int BREEDING_AGE = 15;
     // The age to which a fox can live.
-    private static final int MAX_AGE = 150;
+    private static final int MAX_AGE = 15000;
     // The likelihood of a fox breeding.
-    private static final double BREEDING_PROBABILITY = 0.08;
+    private static final double BREEDING_PROBABILITY = 0.24;
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 2;
     // The food value of a single rabbit. In effect, this is the
     // number of steps a fox can go before it has to eat again.
     private static final int RABBIT_FOOD_VALUE = 9;
-    // A shared random number generator to control breeding.
-    private static final Random rand = Randomizer.getRandom();
-    
     // Individual characteristics (instance fields).
 
     // The fox's age.
@@ -42,16 +38,17 @@ public class Fox extends Animal
      * @param randomAge If true, the fox will have random age and hunger level.
      * @param location The location within the field.
      */
-    public Fox(boolean randomAge, Location location)
+    public lion(boolean randomAge, Location location)
     {
         super(location);
         if(randomAge) {
-            age = rand.nextInt(MAX_AGE);
+            age = rand.nextInt(MAX_AGE/2);
         }
         else {
             age = 0;
         }
-        foodLevel = rand.nextInt(RABBIT_FOOD_VALUE);
+        foodLevel = rand.nextInt(10);
+        // gender is initialized in the Animal constructor
     }
     
     /**
@@ -69,7 +66,7 @@ public class Fox extends Animal
             List<Location> freeLocations =
                     nextFieldState.getFreeAdjacentLocations(getLocation());
             if(! freeLocations.isEmpty()) {
-                giveBirth(nextFieldState, freeLocations);
+                giveBirth(currentField, nextFieldState, freeLocations);
             }
             // Move towards a source of food if found.
             Location nextLocation = findFood(currentField);
@@ -93,7 +90,7 @@ public class Fox extends Animal
 
     @Override
     public String toString() {
-        return "Fox{" +
+        return "lion{" +
                 "age=" + age +
                 ", alive=" + isAlive() +
                 ", location=" + getLocation() +
@@ -111,6 +108,15 @@ public class Fox extends Animal
             setDead();
         }
     }
+
+    /**
+     * get the age of the animal.
+     */
+    public int getAge() {
+        return age;
+    }
+
+    // getGender() inherited from Animal
     
     /**
      * Make this fox more hungry. This could result in the fox's death.
@@ -137,15 +143,39 @@ public class Fox extends Animal
         while(foodLocation == null && it.hasNext()) {
             Location loc = it.next();
             Animal animal = field.getAnimalAt(loc);
-            if(animal instanceof Rabbit rabbit) {
-                if(rabbit.isAlive()) {
-                    rabbit.setDead();
-                    foodLevel = RABBIT_FOOD_VALUE;
+            if(animal instanceof prey prey) {
+                if(prey.isAlive()) {
+                    int foodValue = prey.getEaten();
+                    foodLevel += foodValue;
                     foodLocation = loc;
                 }
             }
+            
         }
         return foodLocation;
+    }
+
+    /**
+     * Look for a mate adjacent to the current location.
+     * Only the first live mate is considered.
+     * @param field The field currently occupied.
+     * @return true if a mate was found, false otherwise.
+     */
+    private boolean findMate(Field field)
+    {
+        List<Location> adjacent = field.getAdjacentLocations(getLocation());
+        Iterator<Location> it = adjacent.iterator();
+        while(it.hasNext()) {
+            Location loc = it.next();
+            Animal animal = field.getAnimalAt(loc);
+            if(animal instanceof lion Lion && Lion.getGender() == 1) {
+                if(Lion.isAlive() && Lion.getAge() >= BREEDING_AGE) {
+                    return true;
+                }
+            }
+            
+        }
+        return false;
     }
     
     /**
@@ -153,15 +183,15 @@ public class Fox extends Animal
      * New births will be made into free adjacent locations.
      * @param freeLocations The locations that are free in the current field.
      */
-    private void giveBirth(Field nextFieldState, List<Location> freeLocations)
+    private void giveBirth(Field currentField, Field nextFieldState, List<Location> freeLocations)
     {
         // New foxes are born into adjacent locations.
         // Get a list of adjacent free locations.
-        int births = breed();
-        if(births > 0) {
+        int births = breed(currentField);  
+        if(births > 0) { 
             for (int b = 0; b < births && ! freeLocations.isEmpty(); b++) {
                 Location loc = freeLocations.remove(0);
-                Fox young = new Fox(false, loc);
+                lion young = new lion(false, loc);
                 nextFieldState.placeAnimal(young, loc);
             }
         }
@@ -172,10 +202,10 @@ public class Fox extends Animal
      * if it can breed.
      * @return The number of births (may be zero).
      */
-    private int breed()
+    private int breed(Field currentField)
     {
         int births;
-        if(canBreed() && rand.nextDouble() <= BREEDING_PROBABILITY) {
+        if(canBreed(currentField) && rand.nextDouble() <= BREEDING_PROBABILITY) {
             births = rand.nextInt(MAX_LITTER_SIZE) + 1;
         }
         else {
@@ -187,8 +217,8 @@ public class Fox extends Animal
     /**
      * A fox can breed if it has reached the breeding age.
      */
-    private boolean canBreed()
+    protected boolean canBreed(Field currentField)
     {
-        return age >= BREEDING_AGE;
+        return age >= BREEDING_AGE && findMate(currentField) && getGender() == 2; // Only a female lion can give birth, and only if both are above the age limit and there is a male lion adjacent in the current field 
     }
 }

@@ -114,26 +114,71 @@ public class Field
     }
 
     /**
-     * Print out the number of foxes and rabbits in the field.
+     * Print out the number of leopards, deers, gazzels, tigers and lions in the field.
      */
-    public void fieldStats()
-    {
-        int numFoxes = 0, numRabbits = 0;
-        for(Animal anAnimal : field.values()) {
-            if(anAnimal instanceof Fox fox) {
-                if(fox.isAlive()) {
-                    numFoxes++;
+    public void fieldStats() {
+    // 1. Initialize counters for both genders for every species
+    int mLeopards = 0, fLeopards = 0;
+    int mDeers = 0, fDeers = 0;
+    int mGazzels = 0, fGazzels = 0;
+    int mTigers = 0, fTigers = 0;
+    int mLions = 0, fLions = 0;
+
+    // 2. Iterate through the field
+    for (Animal anAnimal : field.values()) {
+        // We only care if the animal is alive
+        if (anAnimal.isAlive()) {
+            
+            // LEOPARDS
+            if (anAnimal instanceof leopard) {
+                if (anAnimal.getGender() == 1) {
+                    mLeopards++;
+                } else {
+                    fLeopards++;
+                }
+            } 
+            // DEERS
+            else if (anAnimal instanceof deer) {
+                if (anAnimal.getGender() == 1) {
+                    mDeers++;
+                } else {
+                    fDeers++;
                 }
             }
-            else if(anAnimal instanceof Rabbit rabbit) {
-                if(rabbit.isAlive()) {
-                    numRabbits++;
+            // GAZZELS
+            else if (anAnimal instanceof gazzell) {
+                if (anAnimal.getGender() == 1) {
+                    mGazzels++;
+                } else {
+                    fGazzels++;
+                }
+            }
+            // TIGERS
+            else if (anAnimal instanceof tiger) {
+                if (anAnimal.getGender() == 1) {
+                    mTigers++;
+                } else {
+                    fTigers++;
+                }
+            }
+            // LIONS
+            else if (anAnimal instanceof lion) {
+                if (anAnimal.getGender() == 1) {
+                    mLions++;
+                } else {
+                    fLions++;
                 }
             }
         }
-        System.out.println("Rabbits: " + numRabbits +
-                           " Foxes: " + numFoxes);
     }
+
+    // 3. Print the results clearly
+    System.out.println("Leopards: M-" + mLeopards + " F-" + fLeopards +
+                       " | Deers: M-" + mDeers + " F-" + fDeers +
+                       " | Gazzels: M-" + mGazzels + " F-" + fGazzels +
+                       " | Tigers: M-" + mTigers + " F-" + fTigers +
+                       " | Lions: M-" + mLions + " F-" + fLions);
+}
 
     /**
      * Empty the field.
@@ -144,28 +189,67 @@ public class Field
     }
 
     /**
-     * Return whether there is at least one rabbit and one fox in the field.
-     * @return true if there is at least one rabbit and one fox in the field.
+     * Return whether there is at least two or more species in the field.
+     * @return true if there is at least two or more species in the field.
      */
     public boolean isViable()
     {
-        boolean rabbitFound = false;
-        boolean foxFound = false;
+        boolean leopardFound = false;
+        boolean deerFound = false;
+        boolean gazzellFound = false;
+        boolean tigerFound = false;
+        boolean lionFound = false;
+        int numSpecies = 0;
         Iterator<Animal> it = animals.iterator();
-        while(it.hasNext() && ! (rabbitFound && foxFound)) {
+        while(it.hasNext() && ! (leopardFound && deerFound && gazzellFound && tigerFound && lionFound)) {
             Animal anAnimal = it.next();
-            if(anAnimal instanceof Rabbit rabbit) {
-                if(rabbit.isAlive()) {
-                    rabbitFound = true;
+            if(anAnimal instanceof leopard leopard) {
+                if(leopard.isAlive()) {
+                    leopardFound = true;
                 }
             }
-            else if(anAnimal instanceof Fox fox) {
-                if(fox.isAlive()) {
-                    foxFound = true;
+            else if(anAnimal instanceof deer deer) {
+                if(deer.isAlive()) {
+                    deerFound = true;
+                }
+            }
+            else if(anAnimal instanceof gazzell gazzell) {
+                if(gazzell.isAlive()) {
+                    gazzellFound = true;
+                }
+            }
+            else if(anAnimal instanceof tiger tiger) {
+                if(tiger.isAlive()) {
+                    tigerFound = true;
+                }
+            }
+            else if(anAnimal instanceof lion lion) {
+                if(lion.isAlive()) {
+                    lionFound = true;
                 }
             }
         }
-        return rabbitFound && foxFound;
+        if(leopardFound) {
+            numSpecies++;
+        }
+        if(deerFound) {
+            numSpecies++;
+        }
+        if(gazzellFound) {
+            numSpecies++;
+        }
+        if(tigerFound) {
+            numSpecies++;
+        }
+        if(lionFound) {
+            numSpecies++;
+        }
+        // if there is at least two or more species in the field, return true.
+        boolean viable = false;
+        if(numSpecies >= 2) {
+            viable = true;
+        }
+        return viable;
     }
     
     /**

@@ -1,5 +1,6 @@
 import java.util.List;
 import java.util.Random;
+import java.util.Iterator;
 
 /**
  * A simple model of a rabbit.
@@ -8,15 +9,17 @@ import java.util.Random;
  * @author David J. Barnes and Michael Kölling
  * @version 7.1
  */
-public class Rabbit extends Animal
+public class gazzell extends prey
 {
     // Characteristics shared by all rabbits (class variables).
     // The age at which a rabbit can start to breed.
     private static final int BREEDING_AGE = 5;
     // The age to which a rabbit can live.
-    private static final int MAX_AGE = 40;
+    private static final int MAX_AGE = 70;
     // The likelihood of a rabbit breeding.
-    private static final double BREEDING_PROBABILITY = 0.12;
+    private static final double BREEDING_PROBABILITY = 0.28;
+    //value upon eating a rabbit 
+    private static final int RABBIT_FOOD_VALUE = 9;
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 4;
     // A shared random number generator to control breeding.
@@ -34,7 +37,7 @@ public class Rabbit extends Animal
      * @param randomAge If true, the rabbit will have a random age.
      * @param location The location within the field.
      */
-    public Rabbit(boolean randomAge, Location location)
+    public gazzell(boolean randomAge, Location location)
     {
         super(location);
         age = 0;
@@ -56,7 +59,7 @@ public class Rabbit extends Animal
             List<Location> freeLocations = 
                 nextFieldState.getFreeAdjacentLocations(getLocation());
             if(!freeLocations.isEmpty()) {
-                giveBirth(nextFieldState, freeLocations);
+                giveBirth(currentField, nextFieldState, freeLocations);
             }
             // Try to move into a free location.
             if(! freeLocations.isEmpty()) {
@@ -71,9 +74,23 @@ public class Rabbit extends Animal
         }
     }
 
+
+
+    /**
+     * get the age of the animal.
+     */
+    public int getAge() {
+        return age;
+    }
+    
+    public int getEaten() {
+        setDead();
+        return RABBIT_FOOD_VALUE; // Return a the food value of the eaten rabbit
+    }
+
     @Override
     public String toString() {
-        return "Rabbit{" +
+        return "gazzell{" +
                 "age=" + age +
                 ", alive=" + isAlive() +
                 ", location=" + getLocation() +
@@ -93,19 +110,42 @@ public class Rabbit extends Animal
     }
     
     /**
-     * Check whether or not this rabbit is to give birth at this step.
+     * Look for a mate adjacent to the current location.
+     * Only the first live mate is considered.
+     * @param field The field currently occupied.
+     * @return true if a mate was found, false otherwise.
+     */
+    private boolean findMate(Field field)
+    {
+        List<Location> adjacent = field.getAdjacentLocations(getLocation());
+        Iterator<Location> it = adjacent.iterator();
+        while(it.hasNext()) {
+            Location loc = it.next();
+            Animal animal = field.getAnimalAt(loc);
+            if(animal instanceof gazzell Gazzell && Gazzell.getGender() == 1) {
+                if(Gazzell.isAlive() && Gazzell.getAge() >= BREEDING_AGE) {
+                    return true;
+                }
+            }
+            
+        }
+        return false;
+    }
+    
+    /**
+     * Check whether this fox is to give birth at this step.
      * New births will be made into free adjacent locations.
      * @param freeLocations The locations that are free in the current field.
      */
-    private void giveBirth(Field nextFieldState, List<Location> freeLocations)
+    private void giveBirth(Field currentField, Field nextFieldState, List<Location> freeLocations)
     {
-        // New rabbits are born into adjacent locations.
+        // New foxes are born into adjacent locations.
         // Get a list of adjacent free locations.
-        int births = breed();
-        if(births > 0) {
-            for (int b = 0; b < births && !freeLocations.isEmpty(); b++) {
+        int births = breed(currentField);  
+        if(births > 0) { 
+            for (int b = 0; b < births && ! freeLocations.isEmpty(); b++) {
                 Location loc = freeLocations.remove(0);
-                Rabbit young = new Rabbit(false, loc);
+                gazzell young = new gazzell(false, loc);
                 nextFieldState.placeAnimal(young, loc);
             }
         }
@@ -116,10 +156,10 @@ public class Rabbit extends Animal
      * if it can breed.
      * @return The number of births (may be zero).
      */
-    private int breed()
+    private int breed(Field currentField)
     {
         int births;
-        if(canBreed() && rand.nextDouble() <= BREEDING_PROBABILITY) {
+        if(canBreed(currentField) && rand.nextDouble() <= BREEDING_PROBABILITY) {
             births = rand.nextInt(MAX_LITTER_SIZE) + 1;
         }
         else {
@@ -129,11 +169,10 @@ public class Rabbit extends Animal
     }
 
     /**
-     * A rabbit can breed if it has reached the breeding age.
-     * @return true if the rabbit can breed, false otherwise.
+     * A fox can breed if it has reached the breeding age.
      */
-    private boolean canBreed()
+    protected boolean canBreed(Field currentField)
     {
-        return age >= BREEDING_AGE;
+        return age >= BREEDING_AGE && findMate(currentField) && getGender() == 2; // Only a female lion can give birth, and only if both are above the age limit and there is a male lion adjacent in the current field 
     }
 }

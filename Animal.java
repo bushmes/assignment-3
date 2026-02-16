@@ -5,12 +5,18 @@
  * @author David J. Barnes and Michael Kölling
  * @version 7.0
  */
+import java.util.Random;
+
 public abstract class Animal
 {
 
     private boolean alive;
     // The animal's position.
     private Location location;
+    // shared random generator for subclasses
+    protected static final Random rand = Randomizer.getRandom();
+    // gender: 1 = male, 2 = female
+    protected int gender;
 
     /**
      * Constructor for objects of class Animal.
@@ -20,6 +26,8 @@ public abstract class Animal
     {
         this.alive = true;
         this.location = location;
+        // assign random gender to every new animal
+        this.gender = rand.nextInt(2) + 1;
     }
     
     /**
@@ -28,6 +36,13 @@ public abstract class Animal
      * @param nextFieldState The new state being built.
      */
     abstract public void act(Field currentField, Field nextFieldState);
+
+    /**
+     * check whether the animal can breed. by checking the gender and age of the animal.
+     * @return true if the animal can breed, false otherwise.
+     */
+    abstract protected boolean canBreed(Field currentField);
+
     
     /**
      * Check whether the animal is alive or not.
@@ -63,5 +78,13 @@ public abstract class Animal
     protected void setLocation(Location location)
     {
         this.location = location;
+    }
+
+    /**
+     * Return the animal's gender: 1 = male, 2 = female.
+     */
+    public int getGender()
+    {
+        return gender;
     }
 }
