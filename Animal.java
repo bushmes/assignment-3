@@ -35,7 +35,7 @@ public abstract class Animal
      * @param currentField The current state of the field.
      * @param nextFieldState The new state being built.
      */
-    abstract public void act(Field currentField, Field nextFieldState);
+    abstract public void act(Field currentField, Field nextFieldState, int steps);
 
     /**
      * check whether the animal can breed. by checking the gender and age of the animal.
@@ -44,6 +44,15 @@ public abstract class Animal
     abstract protected boolean canBreed(Field currentField);
 
     
+
+    protected boolean nightTime(int steps) {
+        // Assuming that every step is an hour and that night time is from 6 PM (18) to 6 AM (6)
+        int hour = steps % 24;
+        if(hour >= 18 || hour < 6) {
+            return true;
+        }
+        return false;
+    }
     /**
      * Check whether the animal is alive or not.
      * @return true if the animal is still alive.

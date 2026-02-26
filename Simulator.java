@@ -11,17 +11,17 @@ public class Simulator
 {
     // Constants representing configuration information for the simulation.
     // The default width for the grid.
-    private static final int DEFAULT_WIDTH = 200;
+    private static final int DEFAULT_WIDTH = 160;
     // The default depth of the grid.
-    private static final int DEFAULT_DEPTH = 160;
+    private static final int DEFAULT_DEPTH = 120;
     // Lions and Tigers need large territories and lots of food.
-    private static final double LION_CREATION_PROBABILITY = 0.02; 
+    private static final double LION_CREATION_PROBABILITY = 0.03; 
     private static final double TIGER_CREATION_PROBABILITY = 0.03;
     // Leopards are more adaptable but still need to be fewer than prey.
-    private static final double LEOPARD_CREATION_PROBABILITY = 0.06;
+    private static final double LEOPARD_CREATION_PROBABILITY = 0.07;
     // These need high numbers to sustain the predators above.
-    private static final double GAZELLE_CREATION_PROBABILITY = 0.07;
-    private static final double DEER_CREATION_PROBABILITY = 0.07;
+    private static final double GAZELLE_CREATION_PROBABILITY = 0.1;
+    private static final double DEER_CREATION_PROBABILITY = 0.1;
 
     // The current state of the field.
     private Field field;
@@ -94,7 +94,7 @@ public class Simulator
 
         List<Animal> animals = field.getAnimals();
         for (Animal anAnimal : animals) {
-            anAnimal.act(field, nextFieldState);
+            anAnimal.act(field, nextFieldState, step);
         }
         
         // Replace the old state with the new one.
@@ -119,31 +119,57 @@ public class Simulator
      */
     private void populate()
     {
+        double leo = LEOPARD_CREATION_PROBABILITY, lion = LION_CREATION_PROBABILITY, tig = TIGER_CREATION_PROBABILITY, gaz = GAZELLE_CREATION_PROBABILITY, deer = DEER_CREATION_PROBABILITY;
         Random rand = Randomizer.getRandom();
         field.clear();
         for(int row = 0; row < field.getDepth(); row++) {
             for(int col = 0; col < field.getWidth(); col++) {
-                if(rand.nextDouble() <= LEOPARD_CREATION_PROBABILITY) {
+                if(rand.nextDouble() <= leo) {
                     Location location = new Location(row, col);
+                    leo = leo * 1.1; // increase the probability of leopards being created repeatedly
                     leopard leopard = new leopard(true, location);
                     field.placeAnimal(leopard, location);
+                    lion = LION_CREATION_PROBABILITY; // reset the probability of lions being created
+                    tig = TIGER_CREATION_PROBABILITY; // reset the probability of tigers being created
+                    gaz = GAZELLE_CREATION_PROBABILITY; // reset the probability of gazelles being created
+                    deer = DEER_CREATION_PROBABILITY; // reset the probability of deer being created
                 }
-                else if(rand.nextDouble() <= LION_CREATION_PROBABILITY) {
+                else if(rand.nextDouble() <= lion) {
                     Location location = new Location(row, col);
-                    lion lion = new lion(true, location);
-                    field.placeAnimal(lion, location);
-                }else if(rand.nextDouble() <= TIGER_CREATION_PROBABILITY) { 
+                    lion = lion * 1.4; // increase the probability of lions being created repeatedly
+                    lion Lion = new lion(true, location);
+                    field.placeAnimal(Lion, location);
+                    leo = LEOPARD_CREATION_PROBABILITY; // reset the probability of leopards being created
+                    tig = TIGER_CREATION_PROBABILITY; // reset the probability of tigers being created
+                    gaz = GAZELLE_CREATION_PROBABILITY; // reset the probability of gazelles being created
+                    deer = DEER_CREATION_PROBABILITY; // reset the probability of deer being created    
+                }else if(rand.nextDouble() <= tig) { 
                     Location location = new Location(row, col); 
+                    tig = tig * 1.4; // increase the probability of tigers being created repeatedly
                     tiger tiger = new tiger(true, location); 
                     field.placeAnimal(tiger, location); 
-                }else if(rand.nextDouble() <= GAZELLE_CREATION_PROBABILITY) { 
+                    leo = LEOPARD_CREATION_PROBABILITY; // reset the probability of leopards being created
+                    lion = LION_CREATION_PROBABILITY; // reset the probability of lions being created           
+                    gaz = GAZELLE_CREATION_PROBABILITY; // reset the probability of gazelles being created
+                    deer = DEER_CREATION_PROBABILITY; // reset the probability of deer being created
+                }else if(rand.nextDouble() <= gaz) { 
                     Location location = new Location(row, col); 
+                    gaz = gaz * 0.95; // decrease the probability of gazelles being created repeatedly
                     gazzell gazzell = new gazzell(true, location); 
                     field.placeAnimal(gazzell, location);
-                }else if(rand.nextDouble() <= DEER_CREATION_PROBABILITY) {
-                    Location location = new Location(row, col); 
-                    deer deer = new deer(true, location); 
-                    field.placeAnimal(deer, location);
+                    leo = LEOPARD_CREATION_PROBABILITY; // reset the probability of leopards being created
+                    lion = LION_CREATION_PROBABILITY; // reset the probability of lions being created
+                    tig = TIGER_CREATION_PROBABILITY; // reset the probability of tigers being created
+                    deer = DEER_CREATION_PROBABILITY; // reset the probability of deer being created
+                }else if(rand.nextDouble() <= deer) {
+                    Location location = new Location(row, col);
+                    deer = deer * 0.95; // decrease the probability of deer being created repeatedly 
+                    deer Deer = new deer(true, location); 
+                    field.placeAnimal(Deer, location);
+                    leo = LEOPARD_CREATION_PROBABILITY; // reset the probability of leopards being created
+                    lion = LION_CREATION_PROBABILITY; // reset the probability of lions being created
+                    tig = TIGER_CREATION_PROBABILITY; // reset the probability of tigers being created
+                    gaz = GAZELLE_CREATION_PROBABILITY; // reset the probability of gazelles being created
                 }
                 // else leave the location empty.
             }

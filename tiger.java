@@ -15,17 +15,17 @@ public class tiger extends Animal
     
 
     // The age at which a fox can start to breed.
-    private static final int BREEDING_AGE = 15;
+    private static final int BREEDING_AGE = 5;
     // The age to which a fox can live.
-    private static final int MAX_AGE = 15000;
+    private static final int MAX_AGE = 150;
     // The likelihood of a fox breeding.
-    private static final double BREEDING_PROBABILITY = 0.24;
+    private static double BREEDING_PROBABILITY = 0.24;
     // The maximum number of births.
-    private static final int MAX_LITTER_SIZE = 2;
+    private static final int MAX_LITTER_SIZE = 5;
     // The food value of a single fox. In effect, this is the
     private static final int FOX_FOOD_VALUE = 9;
     // number of steps a fox can go before it has to eat again.
-    private static final int MAX_FOOD_LEVEL = 10;
+    private static final int MAX_FOOD_LEVEL = 22;
     // A shared random number generator to control breeding.
     private static final Random rand = Randomizer.getRandom();
     // Individual characteristics (instance fields).
@@ -60,31 +60,50 @@ public class tiger extends Animal
      * or die of old age.
      * @param currentField The field currently occupied.
      * @param nextFieldState The updated field.
+     * @param steps The current step number in the simulation.
      */
-    public void act(Field currentField, Field nextFieldState)
+    public void act(Field currentField, Field nextFieldState, int steps)
     {
+        int tig = 0;
         incrementAge();
         incrementHunger();
-        if(isAlive()) {
-            List<Location> freeLocations =
-                    nextFieldState.getFreeAdjacentLocations(getLocation());
-            if(! freeLocations.isEmpty()) {
-                giveBirth(currentField, nextFieldState, freeLocations);
-            }
-            // Move towards a source of food if found.
-            Location nextLocation = findFood(currentField);
-            if(nextLocation == null && ! freeLocations.isEmpty()) {
-                // No food found - try to move to a free location.
-                nextLocation = freeLocations.remove(0);
-            }
-            // See if it was possible to move.
-            if(nextLocation != null) {
-                setLocation(nextLocation);
-                nextFieldState.placeAnimal(this, nextLocation);
-            }
-            else {
-                // Overcrowding.
-                setDead();
+        if(!nightTime(steps)) { // Deer only act during the day, because they are nocturnal animals
+            if(isAlive()) {
+                List<Location> freeLocations =
+                        nextFieldState.getFreeAdjacentLocations(getLocation());
+                if(! freeLocations.isEmpty()) {
+                    List<Animal> animals = currentField.getAnimals();
+                    for (Animal animal : animals) {
+                        if (animal instanceof tiger Tiger) {
+                            tig++;
+                        }
+                    }
+                    if (tig > 10000) { // If there are more than 10000 gazelles in the field, decrease the breeding probability to prevent overpopulation
+                        BREEDING_PROBABILITY = 0.1;
+                    }else if(tig <100){
+                        BREEDING_PROBABILITY = 0.65; // increase the breeding probability to aviod extinction
+                    }else if(tig <1000){
+                        BREEDING_PROBABILITY = 0.30; // increase the breeding probability to encourage population growth when the population is under control
+                    } else {
+                        BREEDING_PROBABILITY = 0.22; // Reset the breeding probability to its original value when the population is under control
+                    }
+                    giveBirth(currentField, nextFieldState, freeLocations);
+                }
+                // Move towards a source of food if found.
+                Location nextLocation = findFood(currentField);
+                if(nextLocation == null && ! freeLocations.isEmpty()) {
+                    // No food found - try to move to a free location.
+                    nextLocation = freeLocations.remove(0);
+                }
+                // See if it was possible to move.
+                if(nextLocation != null) {
+                    setLocation(nextLocation);
+                    nextFieldState.placeAnimal(this, nextLocation);
+                }
+                else {
+                    // Overcrowding.
+                    setDead();
+                }
             }
         }
     }

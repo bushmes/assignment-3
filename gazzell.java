@@ -17,9 +17,9 @@ public class gazzell extends prey
     // The age to which a rabbit can live.
     private static final int MAX_AGE = 70;
     // The likelihood of a rabbit breeding.
-    private static final double BREEDING_PROBABILITY = 0.28;
+    private static double BREEDING_PROBABILITY = 0.22;
     //value upon eating a rabbit 
-    private static final int RABBIT_FOOD_VALUE = 9;
+    private static final int FOOD_VALUE = 16;
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 4;
     // A shared random number generator to control breeding.
@@ -51,25 +51,44 @@ public class gazzell extends prey
      * around. Sometimes it will breed or die of old age.
      * @param currentField The field occupied.
      * @param nextFieldState The updated field.
+     * @param steps The current step number in the simulation.
      */
-    public void act(Field currentField, Field nextFieldState)
+    public void act(Field currentField, Field nextFieldState, int steps)
     {
+        int gaz = 0;
         incrementAge();
-        if(isAlive()) {
-            List<Location> freeLocations = 
-                nextFieldState.getFreeAdjacentLocations(getLocation());
-            if(!freeLocations.isEmpty()) {
-                giveBirth(currentField, nextFieldState, freeLocations);
-            }
-            // Try to move into a free location.
-            if(! freeLocations.isEmpty()) {
-                Location nextLocation = freeLocations.get(0);
-                setLocation(nextLocation);
-                nextFieldState.placeAnimal(this, nextLocation);
-            }
-            else {
-                // Overcrowding.
-                setDead();
+        if(!nightTime(steps)) { // Gazzell only act during the day, because they are nocturnal animals
+            if(isAlive()) {
+                List<Location> freeLocations = 
+                    nextFieldState.getFreeAdjacentLocations(getLocation());
+                if(!freeLocations.isEmpty()) {
+                    List<Animal> animals = currentField.getAnimals();
+                    for (Animal animal : animals) {
+                        if (animal instanceof gazzell Gazzell) {
+                            gaz++;
+                        }
+                    }
+                    if (gaz > 10000) { // If there are more than 10000 gazelles in the field, decrease the breeding probability to prevent overpopulation
+                        BREEDING_PROBABILITY = 0.1;
+                    }else if(gaz <100){
+                        BREEDING_PROBABILITY = 0.65; // increase the breeding probability to aviod extinction
+                    }else if(gaz <1000){
+                        BREEDING_PROBABILITY = 0.28; // increase the breeding probability to encourage population growth when the population is under control
+                    } else {
+                        BREEDING_PROBABILITY = 0.22; // Reset the breeding probability to its original value when the population is under control
+                    }
+                    giveBirth(currentField, nextFieldState, freeLocations);
+                }
+                // Try to move into a free location.
+                if(! freeLocations.isEmpty()) {
+                    Location nextLocation = freeLocations.get(0);
+                    setLocation(nextLocation);
+                    nextFieldState.placeAnimal(this, nextLocation);
+                }
+                else {
+                    // Overcrowding.
+                    setDead();
+                }
             }
         }
     }
@@ -85,7 +104,7 @@ public class gazzell extends prey
     
     public int getEaten() {
         setDead();
-        return RABBIT_FOOD_VALUE; // Return a the food value of the eaten rabbit
+        return FOOD_VALUE; // Return a the food value of the eaten gazzell
     }
 
     @Override

@@ -1,14 +1,13 @@
 #BlueJ class context
 comment0.target=Animal
-comment0.text=\r\n\ Common\ elements\ of\ foxes\ and\ rabbits.\r\n\r\n\ @author\ David\ J.\ Barnes\ and\ Michael\ K\u00F6lling\r\n\ @version\ 7.0\r\n
 comment1.params=location
 comment1.target=Animal(Location)
 comment1.text=\r\n\ Constructor\ for\ objects\ of\ class\ Animal.\r\n\ @param\ location\ The\ animal's\ location.\r\n
 comment2.params=currentField\ nextFieldState
 comment2.target=void\ act(Field,\ Field)
 comment2.text=\r\n\ Act.\r\n\ @param\ currentField\ The\ current\ state\ of\ the\ field.\r\n\ @param\ nextFieldState\ The\ new\ state\ being\ built.\r\n
-comment3.params=
-comment3.target=boolean\ canBreed()
+comment3.params=currentField
+comment3.target=boolean\ canBreed(Field)
 comment3.text=\r\n\ check\ whether\ the\ animal\ can\ breed.\ by\ checking\ the\ gender\ and\ age\ of\ the\ animal.\r\n\ @return\ true\ if\ the\ animal\ can\ breed,\ false\ otherwise.\r\n
 comment4.params=
 comment4.target=boolean\ isAlive()
@@ -22,4 +21,7 @@ comment6.text=\r\n\ Return\ the\ animal's\ location.\r\n\ @return\ The\ animal's
 comment7.params=location
 comment7.target=void\ setLocation(Location)
 comment7.text=\r\n\ Set\ the\ animal's\ location.\r\n\ @param\ location\ The\ new\ location.\r\n
-numComments=8
+comment8.params=
+comment8.target=int\ getGender()
+comment8.text=\r\n\ Return\ the\ animal's\ gender\:\ 1\ \=\ male,\ 2\ \=\ female.\r\n
+numComments=9

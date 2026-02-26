@@ -15,13 +15,15 @@ public class leopard extends prey
     // The age at which a rabbit can start to breed.
     private static final int BREEDING_AGE = 5;
     // The age to which a rabbit can live.
-    private static final int MAX_AGE = 70;
+    private static final int MAX_AGE = 100;
     // The likelihood of a rabbit breeding.
-    private static final double BREEDING_PROBABILITY = 0.28;
+    private static double BREEDING_PROBABILITY = 0.22;
     //value upon eating a rabbit 
-    private static final int RABBIT_FOOD_VALUE = 9;
+    private static final int FOOD_VALUE = 19;
     // The maximum number of births.
-    private static final int MAX_LITTER_SIZE = 4;
+    private static final int MAX_LITTER_SIZE = 3;
+    // The maximum food level a leopard can have
+    private static final int MAX_FOOD_LEVEL = 22;
     // A shared random number generator to control breeding.
     private static final Random rand = Randomizer.getRandom();
     
@@ -29,6 +31,8 @@ public class leopard extends prey
     
     // The rabbit's age.
     private int age;
+    // The leopard's food level, which is increased by eating.
+    private int foodLevel;
 
     /**
      * Create a new rabbit. A rabbit may be created with age
@@ -44,33 +48,71 @@ public class leopard extends prey
         if(randomAge) {
             age = rand.nextInt(MAX_AGE);
         }
+        foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
     }
     
     /**
-     * This is what the rabbit does most of the time - it runs 
+     * This is what the leopard does most of the time - it runs 
      * around. Sometimes it will breed or die of old age.
      * @param currentField The field occupied.
      * @param nextFieldState The updated field.
+     * @param steps The current step number in the simulation.
      */
-    public void act(Field currentField, Field nextFieldState)
+    public void act(Field currentField, Field nextFieldState, int steps)
     {
+        int leo = 0;
         incrementAge();
-        if(isAlive()) {
-            List<Location> freeLocations = 
-                nextFieldState.getFreeAdjacentLocations(getLocation());
-            if(!freeLocations.isEmpty()) {
-                giveBirth(currentField, nextFieldState, freeLocations);
+        incrementHunger();
+        if(!nightTime(steps)) { // Deer only act during the day, because they are nocturnal animals
+            if(isAlive()) {
+                List<Location> freeLocations = 
+                    nextFieldState.getFreeAdjacentLocations(getLocation());
+                if(!freeLocations.isEmpty()) {
+                    List<Animal> animals = currentField.getAnimals();
+                    for (Animal animal : animals) {
+                        if (animal instanceof leopard Leopard) {
+                            leo++;
+                        }
+                    }
+                    if (leo > 10000) { // If there are more than 10000 gazelles in the field, decrease the breeding probability to prevent overpopulation
+                        BREEDING_PROBABILITY = 0.1;
+                    }else if(leo <100){
+                        BREEDING_PROBABILITY = 0.65; // increase the breeding probability to aviod extinction
+                    }else if(leo <1000){
+                        BREEDING_PROBABILITY = 0.30; // increase the breeding probability to encourage population growth when the population is under control
+                    } else {
+                        BREEDING_PROBABILITY = 0.22; // Reset the breeding probability to its original value when the population is under control
+                    }
+                    giveBirth(currentField, nextFieldState, freeLocations);
+                }
+                // Try to move into a free location.
+                Location nextLocation = findFood(currentField);
+                if(nextLocation == null && ! freeLocations.isEmpty()) {
+                    // No food found - try to move to a free location.
+                    nextLocation = freeLocations.remove(0);
+                }
+                // See if it was possible to move.
+                if(nextLocation != null) {
+                    setLocation(nextLocation);
+                    nextFieldState.placeAnimal(this, nextLocation);
+                }
+                else {
+                    // Overcrowding.
+                    setDead();
+                }
             }
-            // Try to move into a free location.
-            if(! freeLocations.isEmpty()) {
-                Location nextLocation = freeLocations.get(0);
-                setLocation(nextLocation);
-                nextFieldState.placeAnimal(this, nextLocation);
-            }
-            else {
-                // Overcrowding.
-                setDead();
-            }
+        }
+    }
+
+
+    /**
+     * Make this fox more hungry. This could result in the fox's death.
+     */
+    private void incrementHunger()
+    {
+        foodLevel--;
+        if(foodLevel <= 0) {
+            setDead();
         }
     }
 
@@ -78,7 +120,7 @@ public class leopard extends prey
     
     public int getEaten() {
         setDead();
-        return RABBIT_FOOD_VALUE; // Return a the food value of the eaten rabbit
+        return FOOD_VALUE; // Return a the food value of the eaten rabbit
     }
 
     @Override
@@ -107,6 +149,34 @@ public class leopard extends prey
      */
     public int getAge() {
         return age;
+    }
+
+
+
+    /**
+     * Look for rabbits adjacent to the current location.
+     * Only the first live rabbit is eaten.
+     * @param field The field currently occupied.
+     * @return Where food was found, or null if it wasn't.
+     */
+    private Location findFood(Field field)
+    {
+        List<Location> adjacent = field.getAdjacentLocations(getLocation());
+        Iterator<Location> it = adjacent.iterator();
+        Location foodLocation = null;
+        while(foodLocation == null && it.hasNext()) {
+            Location loc = it.next();
+            Animal animal = field.getAnimalAt(loc);
+            if(animal instanceof prey prey && !(animal instanceof leopard)) {
+                if(prey.isAlive()) {
+                    int foodValue = prey.getEaten();
+                    foodLevel += foodValue;
+                    foodLocation = loc;
+                }
+            }
+            
+        }
+        return foodLocation;
     }
     
     /**
