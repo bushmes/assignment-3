@@ -23,8 +23,8 @@ public class lion extends Animal
     private static final int MAX_LITTER_SIZE = 5;
     // The maximum food level a leopard can have
     private static final int MAX_FOOD_LEVEL = 22;
-    // number of steps a fox can go before it has to eat again.
-    private static final int RABBIT_FOOD_VALUE = 9;
+    // A shared random number generator to control breeding.
+    private static final Random rand = Randomizer.getRandom();
     // Individual characteristics (instance fields).
 
     // The fox's age.
@@ -48,7 +48,8 @@ public class lion extends Animal
         else {
             age = 0;
         }
-        foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
+        // added 5 to the initail value to make sure no night starvation happens at the beginning of the simulation
+        foodLevel = 5 + rand.nextInt(MAX_FOOD_LEVEL);
         // gender is initialized in the Animal constructor
     }
     
@@ -65,7 +66,25 @@ public class lion extends Animal
         int lion = 0;
         incrementAge();
         incrementHunger();
-        if(!nightTime(steps)) { // loin only act during the day, because they are nocturnal animals
+        // Small chance to get infected randomly
+        if(!isInfected() && Randomizer.getRandom().nextDouble() <= 0.0005) {
+            infect();
+        }
+
+        // Spread when meeting adjacent animals
+        if(isInfected()) {
+            for(Animal other : currentField.getAdjacentAnimals(getLocation())) {
+                if(!other.isInfected() && Randomizer.getRandom().nextDouble() <= 0.15) {
+                    other.infect();
+                }
+            }
+        }
+
+        // Disease progression 
+        progressDisease(0.03, 10);
+        
+        // loin only act during the day, because they are nocturnal animals
+        if(!nightTime(steps)) { 
             if(isAlive()) {
                 List<Location> freeLocations =
                         nextFieldState.getFreeAdjacentLocations(getLocation());
@@ -102,6 +121,11 @@ public class lion extends Animal
                     // Overcrowding.
                     setDead();
                 }
+            }
+        }else{
+            // During the night, the lion does not move or breed, but it can still get infected and spread the disease. We need to update the nextFieldState to reflect any changes in infection status.
+            if (isAlive()) {
+                nextFieldState.placeAnimal(this, getLocation());
             }
         }
     }
@@ -158,6 +182,12 @@ public class lion extends Animal
     private Location findFood(Field field)
     {
         List<Location> adjacent = field.getAdjacentLocations(getLocation());
+        if(field.getWeather() == Weather.FOGGY) {
+            Location here = getLocation();
+            adjacent.removeIf(loc ->
+                Math.abs(loc.row() - here.row()) + Math.abs(loc.col() - here.col()) != 1
+            );
+        }
         Iterator<Location> it = adjacent.iterator();
         Location foodLocation = null;
         while(foodLocation == null && it.hasNext()) {

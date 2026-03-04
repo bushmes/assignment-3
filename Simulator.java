@@ -15,13 +15,19 @@ public class Simulator
     // The default depth of the grid.
     private static final int DEFAULT_DEPTH = 120;
     // Lions and Tigers need large territories and lots of food.
-    private static final double LION_CREATION_PROBABILITY = 0.03; 
-    private static final double TIGER_CREATION_PROBABILITY = 0.03;
+    private static final double LION_CREATION_PROBABILITY = 0.015; 
+    private static final double TIGER_CREATION_PROBABILITY = 0.015;
     // Leopards are more adaptable but still need to be fewer than prey.
-    private static final double LEOPARD_CREATION_PROBABILITY = 0.07;
+    private static final double LEOPARD_CREATION_PROBABILITY = 0.025;
     // These need high numbers to sustain the predators above.
-    private static final double GAZELLE_CREATION_PROBABILITY = 0.1;
-    private static final double DEER_CREATION_PROBABILITY = 0.1;
+    private static final double GAZELLE_CREATION_PROBABILITY = 0.25;
+    private static final double DEER_CREATION_PROBABILITY = 0.25;
+    // The probability that a plant will be created
+    private static final double PLANT_CREATION_PROBABILITY = 0.07;
+
+
+    private final WeatherModel weatherModel = new WeatherModel();
+
 
     // The current state of the field.
     private Field field;
@@ -92,6 +98,17 @@ public class Simulator
         // the next step.
         Field nextFieldState = new Field(field.getDepth(), field.getWidth());
 
+        // copy persistent layers/state
+        nextFieldState.copyPlantsFrom(field);
+        nextFieldState.copyWeatherFrom(field);
+
+        // update weather for this step
+        weatherModel.updateWeather();
+        nextFieldState.setWeather(weatherModel.getCurrentWeather());
+
+        // grow plants based on weather
+        nextFieldState.growPlants(nextFieldState.getWeather());
+
         List<Animal> animals = field.getAnimals();
         for (Animal anAnimal : animals) {
             anAnimal.act(field, nextFieldState, step);
@@ -121,7 +138,9 @@ public class Simulator
     {
         double leo = LEOPARD_CREATION_PROBABILITY, lion = LION_CREATION_PROBABILITY, tig = TIGER_CREATION_PROBABILITY, gaz = GAZELLE_CREATION_PROBABILITY, deer = DEER_CREATION_PROBABILITY;
         Random rand = Randomizer.getRandom();
+        field.setWeather(weatherModel.getCurrentWeather());
         field.clear();
+        field.seedPlants(PLANT_CREATION_PROBABILITY);
         for(int row = 0; row < field.getDepth(); row++) {
             for(int col = 0; col < field.getWidth(); col++) {
                 if(rand.nextDouble() <= leo) {

@@ -18,6 +18,10 @@ public abstract class Animal
     // gender: 1 = male, 2 = female
     protected int gender;
 
+    //infected state values
+    private boolean infected = false;
+    private int infectedSteps = 0;
+
     /**
      * Constructor for objects of class Animal.
      * @param location The animal's location.
@@ -95,5 +99,31 @@ public abstract class Animal
     public int getGender()
     {
         return gender;
+    }
+
+
+    // return whether the animal is infected or not
+    public boolean isInfected() {
+        return infected;
+    }
+
+    // Infect the animal with the disease
+    public void infect() {
+        infected = true;
+        infectedSteps = 0;
+    }
+
+    
+     // Update disease progression for one step.
+    protected void progressDisease(double deathProbAfterIncubation, int incubationSteps) {
+        if(!infected) return;
+
+        infectedSteps++;
+
+        if(infectedSteps >= incubationSteps) {
+            if(Randomizer.getRandom().nextDouble() <= deathProbAfterIncubation) {
+                setDead();
+            }
+        }
     }
 }

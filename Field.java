@@ -19,6 +19,17 @@ public class Field
     // The animals.
     private final List<Animal> animals = new ArrayList<>();
 
+
+    // Amount of plant food available at each location
+    private final int[][] plants;
+
+    // Plant configuraton
+    private static final int MAX_PLANT_LEVEL = 6;
+    private static final double PLANT_GROWTH_PROBABILITY = 0.05;
+
+    //Store weather in field state
+    private Weather weather = Weather.SUNNY;
+
     /**
      * Represent a field of the given dimensions.
      * @param depth The depth of the field.
@@ -28,6 +39,73 @@ public class Field
     {
         this.depth = depth;
         this.width = width;
+        this.plants = new int[depth][width];
+    }
+
+    // getters and setters for weather
+    public Weather getWeather() {
+        return weather;
+    }
+
+    public void setWeather(Weather weather) {
+        this.weather = weather;
+    }
+
+    public void copyWeatherFrom(Field other) {
+        this.weather = other.weather;
+    }
+
+    // copy plant levels from another field
+    public void copyPlantsFrom(Field other){
+        for(int i = 0;i < depth; i++){
+            System.arraycopy(other.plants[i], 0, this.plants[i], 0, width);
+        }
+    }
+
+    // initialize the field with plants based on a given initial probability
+    public void seedPlants(double initialProbability){
+        for(int i = 0; i < depth; i++){
+            for(int j = 0; j < width; j++){
+                if(rand.nextDouble() <= initialProbability){
+                    plants[i][j] = 1 +rand.nextInt(Math.max(1, MAX_PLANT_LEVEL / 2));
+                } else {
+                    plants[i][j] = 0;
+                }
+            }
+        }
+    }
+
+    // method to grow plants based on the current weather conditions
+    public void growPlants(Weather weather){
+        double growthProb = PLANT_GROWTH_PROBABILITY;
+
+        if(weather == Weather.RAINY) growthProb *= 2.0;
+        else if(weather == Weather.FOGGY) growthProb *= 0.7;
+
+        for (int i = 0; i < depth; i++) {
+            for (int j = 0; j < width; j++) {
+                if (plants[i][j] < MAX_PLANT_LEVEL && rand.nextDouble() <= growthProb) {
+                    plants[i][j]++;
+                }
+            }
+        }
+    }
+
+    // method to get the current plant level at a given location
+    public int getPlantLevelAt(Location location){
+        return plants[location.row()][location.col()];
+    }
+
+    // method to consume a plant at a given location, returns true if successful
+    public boolean consumePlantAt(Location location)
+    {
+        int i = location.row();
+        int j = location.col();
+        if (plants[i][j] > 0) {
+            plants[i][j]--;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -111,6 +189,18 @@ public class Field
             Collections.shuffle(locations, rand);
         }
         return locations;
+    }
+
+    // method to get a list of adjacent animals to a given location
+    public List<Animal> getAdjacentAnimals(Location location){
+        List<Animal> adjacentAnimals = new ArrayList<>();
+        for(Location loc : getAdjacentLocations(location)) {
+            Animal a = getAnimalAt(loc);
+            if(a != null && a.isAlive()) {
+                adjacentAnimals.add(a);
+            }
+        }
+        return adjacentAnimals;
     }
 
     /**
@@ -200,7 +290,7 @@ public class Field
         boolean tigerFound = false;
         boolean lionFound = false;
         int numSpecies = 0;
-        Iterator<Animal> it = animals.iterator();
+        Iterator<Animal> it = field.values().iterator();
         while(it.hasNext() && ! (leopardFound && deerFound && gazzellFound && tigerFound && lionFound)) {
             Animal anAnimal = it.next();
             if(anAnimal instanceof leopard leopard) {

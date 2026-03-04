@@ -20,6 +20,17 @@ public class SimulatorView extends JFrame
 
     // Color used for objects that have no defined color.
     private static final Color UNKNOWN_COLOR = Color.gray;
+    // Plant's color
+    private static final Color PLANT_COLOR = new Color(120, 200, 120);
+    //some custom colors for animals
+    private static final Color GAZZELL_COLOR = new Color(214, 156, 92);
+    private static final Color LION_COLOR = new Color(105, 48, 15); 
+    //Weathers' colors
+    private static final Color SUNNY_TINT = new Color(255, 255, 255);
+    private static final Color RAINY_TINT = new Color(200, 220, 255);
+    private static final Color FOGGY_TINT = new Color(220, 220, 220);
+    //Infection color
+    private static final Color INFECTED_COLOR = Color.red;
 
     private final String STEP_PREFIX = "Step: ";
     private final String POPULATION_PREFIX = "Population: ";
@@ -44,11 +55,11 @@ public class SimulatorView extends JFrame
         // Set up default colors for the species in the simulation.
         setColor(tiger.class, Color.orange);
         setColor(deer.class, Color.yellow);
-        setColor(gazzell.class, Color.green);
+        setColor(gazzell.class, GAZZELL_COLOR);
         setColor(leopard.class, Color.blue);
-        setColor(lion.class, Color.red);
+        setColor(lion.class, LION_COLOR);
 
-        setTitle("Fox and Rabbit Simulation");
+        setTitle("Jungle Simulation");
         stepLabel = new JLabel(STEP_PREFIX, JLabel.CENTER);
         population = new JLabel(POPULATION_PREFIX, JLabel.CENTER);
         
@@ -105,15 +116,46 @@ public class SimulatorView extends JFrame
         
         fieldView.preparePaint();
 
+        // Set background tint based on weather
+        Color background;
+        if(field.getWeather() == Weather.RAINY) {
+            background = RAINY_TINT;
+        } else if(field.getWeather() == Weather.FOGGY) {
+            background = FOGGY_TINT;
+        } else {
+            background = SUNNY_TINT;
+        }
+
+        // Paint entire background
+        fieldView.drawBackground(background);
+
         for(int row = 0; row < field.getDepth(); row++) {
             for(int col = 0; col < field.getWidth(); col++) {
-                Object animal = field.getAnimalAt(new Location(row, col));
+                Location location = new Location(row, col);
+                Object animal = field.getAnimalAt(location);
                 if(animal != null) {
                     stats.incrementCount(animal.getClass());
-                    fieldView.drawMark(col, row, getColor(animal.getClass()));
+                    Animal a = (Animal) animal;
+                    Color baseColor = getColor(a.getClass());
+                    if(a.isInfected()) {
+                        // get infected tint
+                        int r = (baseColor.getRed() + INFECTED_COLOR.getRed()) / 2;
+                        int g = (baseColor.getGreen() + INFECTED_COLOR.getGreen()) / 2;
+                        int b = (baseColor.getBlue() + INFECTED_COLOR.getBlue()) / 2;
+        
+                        Color tintedColor = new Color(r, g, b);
+                        fieldView.drawMark(col, row, tintedColor);
+                    } else {
+                        fieldView.drawMark(col, row, baseColor);
+                    }
                 }
                 else {
-                    fieldView.drawMark(col, row, EMPTY_COLOR);
+                    if(field.getPlantLevelAt(location) > 0) {
+                        fieldView.drawMark(col, row, PLANT_COLOR);
+                    }
+                    else {
+                        fieldView.drawMark(col, row, EMPTY_COLOR);
+                    }
                 }
             }
         }
@@ -158,6 +200,12 @@ public class SimulatorView extends JFrame
             gridHeight = height;
             gridWidth = width;
             size = new Dimension(0, 0);
+        }
+
+        // Fill the background with a given color
+        public void drawBackground(Color color){
+            g.setColor(color);
+            g.fillRect(0, 0, size.width, size.height);
         }
 
         /**

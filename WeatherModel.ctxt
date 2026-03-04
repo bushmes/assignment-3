@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=WeatherModel
+comment1.params=
+comment1.target=Weather\ getCurrentWeather()
+comment2.params=
+comment2.target=void\ updateWeather()
+numComments=3

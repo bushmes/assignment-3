@@ -51,7 +51,8 @@ public class tiger extends Animal
         else {
             age = 0;
         }
-        foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
+        // added 5 to the initail value to make sure no night starvation happens at the beginning of the simulation
+        foodLevel = 5 + rand.nextInt(MAX_FOOD_LEVEL);
     }
     
     /**
@@ -67,7 +68,25 @@ public class tiger extends Animal
         int tig = 0;
         incrementAge();
         incrementHunger();
-        if(!nightTime(steps)) { // Deer only act during the day, because they are nocturnal animals
+        // Small chance to get infected randomly
+        if(!isInfected() && Randomizer.getRandom().nextDouble() <= 0.0005) {
+            infect();
+        }
+
+        // Spread when meeting adjacent animals
+        if(isInfected()) {
+            for(Animal other : currentField.getAdjacentAnimals(getLocation())) {
+                if(!other.isInfected() && Randomizer.getRandom().nextDouble() <= 0.15) {
+                    other.infect();
+                }
+            }
+        }
+
+        // Disease progression 
+        progressDisease(0.03, 10);
+        
+        // tiger only act during the day, because they are nocturnal animals
+        if(!nightTime(steps)) { 
             if(isAlive()) {
                 List<Location> freeLocations =
                         nextFieldState.getFreeAdjacentLocations(getLocation());
@@ -105,7 +124,12 @@ public class tiger extends Animal
                     setDead();
                 }
             }
-        }
+        }else{
+            // During the night, the tiger does not move or breed, but it can still get infected and spread the disease. We need to update the nextFieldState to reflect any changes in infection status.
+            if (isAlive()) {
+                nextFieldState.placeAnimal(this, getLocation());
+            }
+         }
     }
 
 
@@ -158,6 +182,12 @@ public class tiger extends Animal
     private Location findFood(Field field)
     {
         List<Location> adjacent = field.getAdjacentLocations(getLocation());
+        if(field.getWeather() == Weather.FOGGY) {
+            Location here = getLocation();
+            adjacent.removeIf(loc ->
+                Math.abs(loc.row() - here.row()) + Math.abs(loc.col() - here.col()) != 1
+            );
+        }
         Iterator<Location> it = adjacent.iterator();
         Location foodLocation = null;
         while(foodLocation == null && it.hasNext()) {

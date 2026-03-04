@@ -16,19 +16,26 @@ public class deer extends prey
     private static final int BREEDING_AGE = 5;
     // The age to which a rabbit can live.
     private static final int MAX_AGE = 70;
-    // The likelihood of a rabbit breeding.
+    // The likelihood of a deer breeding.
     private static double BREEDING_PROBABILITY = 0.22;
-    //value upon eating a rabbit 
+    //value upon eating a deer 
     private static final int FOOD_VALUE = 14;
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 4;
+    // The maximum food level a deer can have
+    private static final int MAX_FOOD_LEVEL = 21;
     // A shared random number generator to control breeding.
     private static final Random rand = Randomizer.getRandom();
+    // Plant's food value
+    private static final int PLANT_FOOD_VALUE = 7;
     
     // Individual characteristics (instance fields).
     
-    // The rabbit's age.
+    // The deer's age.
     private int age;
+    
+    // The deer's foodlevel
+    private int foodLevel;
 
     /**
      * Create a new rabbit. A rabbit may be created with age
@@ -44,6 +51,44 @@ public class deer extends prey
         if(randomAge) {
             age = rand.nextInt(MAX_AGE);
         }
+        // added 5 to the initail value to make sure no night starvation happens at the beginning of the simulation
+        foodLevel = 5 + rand.nextInt(MAX_FOOD_LEVEL);
+    
+    }
+
+    // Increases hunger when called
+    private void incrementHunger()
+    {
+         foodLevel--;
+        if(foodLevel <= 0) {
+            setDead();
+        }
+    }
+
+    // find plants in adjacent locations and eat them if found. If the deer eats a plant, its food level is increased.
+    private Location findFood(Field currentField, Field nextFieldState)
+    {
+        Location here = getLocation();
+
+        // Eat in current position first
+        if(currentField.getPlantLevelAt(here) > 0) {
+            if(nextFieldState.consumePlantAt(here)) {
+                foodLevel += PLANT_FOOD_VALUE;
+            }
+            return here;
+        }
+
+        // Otherwise search adjacent
+        List<Location> adjacent = currentField.getAdjacentLocations(here);
+        for(Location loc : adjacent) {
+            if(currentField.getPlantLevelAt(loc) > 0) {
+                if(nextFieldState.consumePlantAt(loc)) {
+                    foodLevel += PLANT_FOOD_VALUE;
+                }
+                return loc;
+            }
+        }
+        return null;
     }
     
     /**
@@ -57,7 +102,27 @@ public class deer extends prey
     {
         int deer = 0;
         incrementAge();
-        if(!nightTime(steps)) { // Deer only act during the day, because they are nocturnal animals
+        incrementHunger();
+
+        // Small chance to get infected randomly
+        if(!isInfected() && Randomizer.getRandom().nextDouble() <= 0.0005) {
+            infect();
+        }
+
+        // Spread when meeting adjacent animals
+        if(isInfected()) {
+            for(Animal other : currentField.getAdjacentAnimals(getLocation())) {
+                if(!other.isInfected() && Randomizer.getRandom().nextDouble() <= 0.15) {
+                    other.infect();
+                }
+            }
+        }
+
+        // Disease progression 
+        progressDisease(0.03, 10);
+
+        // Deer only act during the day, because they are nocturnal animals
+        if(!nightTime(steps)) { 
             if(isAlive()) {
                 List<Location> freeLocations = 
                     nextFieldState.getFreeAdjacentLocations(getLocation());
@@ -74,12 +139,20 @@ public class deer extends prey
                         BREEDING_PROBABILITY = 0.65; // increase the breeding probability to aviod extinction
                     }
                     else if(deer <1000){
-                        BREEDING_PROBABILITY = 0.24; // increase the breeding probability to encourage population growth when the population is under control
+                        BREEDING_PROBABILITY = 0.29; // increase the breeding probability to encourage population growth when the population is under control
                     } else {
                         BREEDING_PROBABILITY = 0.22; // Reset the breeding probability to its original value when the population is under control
                     }
                     giveBirth(currentField, nextFieldState, freeLocations);
                 }
+
+                Location foodLocation = findFood(currentField, nextFieldState);
+                if(foodLocation != null) {
+                    setLocation(foodLocation);
+                    nextFieldState.placeAnimal(this, foodLocation);
+                    return;
+                }
+                
                 // Try to move into a free location.
                 if(! freeLocations.isEmpty()) {
                     Location nextLocation = freeLocations.get(0);
@@ -91,7 +164,12 @@ public class deer extends prey
                     setDead();
                 }
             }
-        }
+        }else{
+            // During the night, the deer does not move or breed, but it can still get infected and spread the disease. We need to update the nextFieldState to reflect any changes in infection status.
+            if (isAlive()) {
+                nextFieldState.placeAnimal(this, getLocation());
+            }
+         }
     }
 
 
